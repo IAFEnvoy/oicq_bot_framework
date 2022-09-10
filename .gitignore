@@ -1,0 +1,8 @@
+/.vscode
+/config
+/node_modules
+/data
+/src/data
+/src/img
+main.json
+permission.json
