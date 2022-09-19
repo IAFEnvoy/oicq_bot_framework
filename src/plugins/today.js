@@ -1,4 +1,5 @@
 const fs = require('fs');
+const oicq = require('oicq');
 
 let todayJson = {};
 
@@ -31,7 +32,7 @@ const datesAreOnSameDay = (f, s) => {
 
 const execute = (message, client, e) => {
     if (message == '/today') {
-        client.sendGroupMsg(e.group_id, `您今日的人品是${today(e.sender.user_id)}`);
+        client.sendGroupMsg(e.group_id, [oicq.segment.at(e.sender.user_id), `您今日的人品是${today(e.sender.user_id)}`]);
         saveTodayConfig();
     }
 }

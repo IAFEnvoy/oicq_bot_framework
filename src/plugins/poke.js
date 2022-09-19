@@ -10,7 +10,7 @@ const execute = (message, client, e) => {
 }
 
 const config = {
-    id: 'pork',
+    id: 'poke',
     name: '戳一戳',
     menu: '戳 <qq号> 戳指定人',
     default_permission: true

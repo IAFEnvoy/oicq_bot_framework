@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const permission = require('./permission');
 
 class BotPluginManager {
@@ -7,8 +7,11 @@ class BotPluginManager {
         this.folder = './src/plugins';
         this.permissionManager = new permission.PermissionManager();
     }
-    register(id, name, callback, menu) { this.plugins.push(new BotPlugin(id, name, callback, menu)); }
-    clear() { this.plugins = [] }
+    clear() {
+        for (let i = 0; i < this.plugins.length; i++)
+            delete require.cache[require.resolve('./plugins/' + this.plugins[i].filename)];
+        this.plugins = [];
+    }
     call(client, event) {
         this.plugins.forEach(plugin => {
             try {
@@ -34,7 +37,7 @@ class BotPluginManager {
                 const plugin = require('./plugins/' + name);
                 if (plugin.init != null)
                     plugin.init(config);
-                this.register(plugin.config, plugin.execute);
+                this.plugins.push(new BotPlugin(plugin.config, name, plugin.execute));
             } catch (err) {
                 console.log('加载插件文件' + name + '时出错');
                 console.log(err);
@@ -59,25 +62,29 @@ class BotPluginManager {
             return p;
         }, []);
     }
-    getMenu() { return this.plugins.reduce((p, c) => c.menu == undefined ? p : p + '\n' + c.menu, '菜单：'); }
-    runManagerEvent(client, e) {
+    getMenu(group_id) { return this.plugins.reduce((p, c) => (!this.permissionManager.hasPermission(c.id, group_id) || c.menu == undefined) ? p : p + '\n' + c.menu, '菜单：'); }
+    runManagerEvent(client, e, config) {
         let message = e.message[0].text;
-        if (message == '菜单') 
-            client.sendGroupMsg(e.group_id, this.getMenu());
         if (message == '/plugin reload') {
             this.clear();
-            this.load();
+            this.load(config);
             client.sendGroupMsg(e.group_id, '已成功重载插件');
             client.sendGroupMsg(e.group_id, '已安装插件：' + this.getPlugins());
         }
-        if (message == '/plugin all')
+        if (message == '/plugin id')
             client.sendGroupMsg(e.group_id, '插件ID列表：' + this.getPluginsId());
+        if (message == '/plugin name')
+            client.sendGroupMsg(e.group_id, '插件列表：' + this.getPlugins());
         if (message == '/plugin enabled')
             client.sendGroupMsg(e.group_id, '已启用插件：' + this.plugins.reduce((p, c) => {
-                if (this.permissionManager.hasPermission(p.id, e.group_id, p.default_permission))
+                if (this.permissionManager.hasPermission(c.id, e.group_id))
                     p.push(c.name);
                 return p;
             }, []));
+        if (message == '/permission reload') {
+            this.permissionManager.load();
+            client.sendGroupMsg(e.group_id, '已成功重载权限文件');
+        }
         let ms = message.split(' ');
         if (ms[0] == '/enable' && ms.length == 2) {
             let p = this.plugins.find(p => p.id == ms[1] || p.name == ms[1]);
@@ -85,7 +92,7 @@ class BotPluginManager {
                 client.sendGroupMsg(e.group_id, '未找到指定插件！');
             else {
                 this.permissionManager.addPermission(p.id, e.group_id);
-                client.sendGroupMsg(e.group_id, `成功启用插件${p.name}`);
+                client.sendGroupMsg(e.group_id, `成功启用插件：${p.name}`);
             }
         }
         if (ms[0] == '/disable' && ms.length == 2) {
@@ -101,16 +108,10 @@ class BotPluginManager {
 }
 
 class BotPlugin {
-    /**
-     * 创建一个插件对象
-     * @param {String} id 插件id（不可重复，否则会被覆盖）
-     * @param {String} name 插件名称（显示在控制台和消息中）
-     * @param {function} callback 格式为(message,client,event)，当消息来的时候将会调用此方法
-     * @param {String|undefined} menu 显示在菜单指令中的文本
-     */
-    constructor(config, callback) {
+    constructor(config, filename, callback) {
         this.id = config.id;
         this.name = config.name;
+        this.filename = filename;
         this.callback = callback;
         this.menu = config.menu;
     }

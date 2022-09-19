@@ -130,7 +130,7 @@ const getThePitLevel = (pitProfile) => {
       }
 }
 
-const modeList = ['bw', 'sw', 'mm', 'duel', 'uhc', 'mw', 'bb', 'pit', 'bsg', 'arcade'];
+const modeList = ['ov', 'g', 'now', 'bw', 'sw', 'mm', 'duel', 'uhc', 'mw', 'bb', 'pit', 'bsg'];
 
 const getData = {
   "ov": () => {
@@ -176,8 +176,7 @@ const getData = {
 飞刀击杀：${mm.knife_kills ?? 0} | 弓箭击杀：${mm.bow_kills ?? 0}
 作为杀手击杀：${mm.kills_as_murderer ?? 0} | 英雄：${mm.was_hero ?? 0}
 作为感染者击杀：${mm.kills_as_infected ?? 0} | 作为幸存者击杀：${mm.kills_as_survivor ?? 0}
-最长存活时间：${mm.longest_time_as_survivor_seconds ?? 0}s
-母体概率：${mm.alpha_chance ?? 0}%`
+最长存活时间：${mm.longest_time_as_survivor_seconds ?? 0}s | 母体概率：${mm.alpha_chance ?? 0}%`
   },
   "duel": () => {
     duel = playerDataJson.stats?.Duels ?? {};
@@ -244,13 +243,13 @@ const execute = async (message, client, e) => {
     else
       cat = ms[2];
     try {
-      let error = await loadPlayer(player, hypixelApiKey);
+      let error = await loadPlayer(player, apikey);
       if (error != null)
         client.sendGroupMsg(e.group_id, error);
       else {
         let text = '';
         if (cat == 'now')
-          text += await loadStatus(hypixelApiKey);
+          text += await loadStatus(apikey);
         else if (cat == 'g')
           text += await loadGuild(apikey);//TODO:传入玩家UUID
         else
@@ -260,15 +259,18 @@ const execute = async (message, client, e) => {
       }
     } catch (err) {
       console.log(err);
-      client.sendGroupMsg(e.group_id, '网络错误，请稍后再试');
+      if (err.message.indexOf('is not a function') != -1)
+        client.sendGroupMsg(e.group_id, `未知的分类，当前支持的分类：${modeList}`)
+      else
+        client.sendGroupMsg(e.group_id, '网络错误，请稍后再试');
     }
   }
 }
 
-const init = (config) => {
-  if (config.hypixelApiKey == null)
+const init = (c) => {
+  if (c.hypixelApiKey == null)
     throw new ReferenceError('未在main.json中找到hypixelApiKey键值');
-  apikey = config.hypixelApiKey;
+  apikey = c.hypixelApiKey;
 }
 
 const config = {
