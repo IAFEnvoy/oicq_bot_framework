@@ -21,7 +21,7 @@ class BotPluginManager {
         }
         this.plugins = [];
     }
-    call(client, event) {
+    onMessage(client, event) {
         this.plugins.forEach(plugin => {
             try {
                 if (this.permissionManager.hasPermission(plugin.id, event.group_id))
@@ -46,7 +46,7 @@ class BotPluginManager {
                 const plugin = require('./plugins/' + name);
                 if (plugin.init != null)
                     plugin.init(config);
-                this.plugins.push(new BotPlugin(plugin.config, name, plugin.execute));
+                this.plugins.push(new BotPlugin(plugin.config, name, plugin.onMessage));
             } catch (err) {
                 console.log('加载插件文件' + name + '时出错');
                 console.log(err);

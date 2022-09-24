@@ -30,7 +30,7 @@ const datesAreOnSameDay = (f, s) => {
         first.getDate() == second.getDate();
 }
 
-const execute = (message, client, e) => {
+const onMessage = (message, client, e) => {
     if (message == '/today') {
         client.sendGroupMsg(e.group_id, [oicq.segment.at(e.sender.user_id), ` 您今日的人品是${today(e.sender.user_id)}`]);
         saveTodayConfig();
@@ -48,4 +48,4 @@ const config = {
     default_permission: true
 };
 
-module.exports = { config, execute, init };
+module.exports = { config, onMessage, init };

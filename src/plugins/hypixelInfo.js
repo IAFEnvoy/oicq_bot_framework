@@ -237,7 +237,7 @@ const socialMediaList = ['DISCORD', 'HYPIXEL', 'TWITCH', 'TWITTER', 'YOUTUBE'];
 
 const getSocialMedia = (platform) => playerDataJson?.socialMedia?.links[platform] ?? null;
 
-const execute = async (message, client, e) => {
+const onMessage = async (message, client, e) => {
   let ms = message.split(' ');
   if (ms[0] == '/hyp' && ms.length >= 2) {
     let now = new Date().getTime();
@@ -317,4 +317,4 @@ const config = {
   default_permission: false
 };
 
-module.exports = { config, execute, init };
+module.exports = { config, onMessage, init };

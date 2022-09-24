@@ -78,7 +78,7 @@ const m = [
     ])
 ]
 
-const execute = (message, client, e) => {
+const onMessage = (message, client, e) => {
     let ms = message.split(' ');
     if (ms[0] == '/yxh' && ms.length >= 3) {
         try {
@@ -100,4 +100,4 @@ const config = {
     default_permission: true
 };
 
-module.exports = { config, execute };
+module.exports = { config, onMessage };

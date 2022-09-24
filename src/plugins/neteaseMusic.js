@@ -41,7 +41,7 @@ const getSongUrl = (index) => {
     return `http://music.163.com/song/media/outer/url?id=${lastJson.songs[index].id}.mp3`;
 }
 
-const execute = async(message, client, e) => {
+const onMessage = async(message, client, e) => {
     let ms = message.split(' ');
     if (ms[0] == '搜歌' && ms.length >= 2) {
         try {
@@ -84,4 +84,4 @@ const config = {
     default_permission: false
 };
 
-module.exports = { config, execute };
+module.exports = { config, onMessage };

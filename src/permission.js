@@ -17,9 +17,7 @@ Array.prototype.remove = function (val) {
 };
 
 class PermissionManager {
-    constructor() {
-
-    }
+    constructor() { }
     load() {
         if (fs.existsSync(FILE_PATH))
             config = JSON.parse(fs.readFileSync(FILE_PATH, 'utf-8'));

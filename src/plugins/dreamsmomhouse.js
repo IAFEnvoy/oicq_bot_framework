@@ -2,7 +2,7 @@ const util = require("./util.cjs")
 
 let houseData = [];
 
-const execute = (message, client, e) => {
+const onMessage = (message, client, e) => {
     let ms = message.split(' ');
     if (ms[0] == '/house' && ms.length >= 2) {
         let room = houseData.find(obj => obj.location == ms[1]);
@@ -37,4 +37,4 @@ const config = {
     menu: '/house <id> 查小屋里的群'
 };
 
-module.exports = { config, execute, init };
+module.exports = { config, onMessage, init };

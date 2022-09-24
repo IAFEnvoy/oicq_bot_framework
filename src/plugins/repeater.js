@@ -1,7 +1,7 @@
 let repeatText = '';
 let repeatCnt = -1;
 
-const execute = (message, client, e) => {
+const onMessage = (message, client, e) => {
     if (message == repeatText) {
         if (repeatCnt == 2) {
             client.sendGroupMsg(e.group_id, repeatText);
@@ -19,4 +19,4 @@ const config = {
     default_permission: true
 };
 
-module.exports = { config, execute };
+module.exports = { config, onMessage };

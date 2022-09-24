@@ -1,4 +1,4 @@
-const execute = (message, client, e) => {
+const onMessage = (message, client, e) => {
     let ms = message.split(' ');
     if (ms[0] == '戳' && ms.length >= 2) {
         try {
@@ -16,4 +16,4 @@ const config = {
     default_permission: true
 };
 
-module.exports = { config, execute };
+module.exports = { config, onMessage };

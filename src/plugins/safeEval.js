@@ -1,7 +1,7 @@
 const blWords = ['import', 'require', 'stop', 'rm', 'kill']
 const safeEval = (cmd) => blWords.find(item => cmd.search(item) != -1) == undefined ? eval(cmd) : '检测到黑名单字符，无法执行';
 
-const execute = (message, client, e) => {
+const onMessage = (message, client, e) => {
     let ms = message.split(' ');
     if (ms[0] == 'run' && ms.length >= 2) {
         let text = "";
@@ -25,4 +25,4 @@ const config = {
     default_permission: false
 };
 
-module.exports = { config, execute };
+module.exports = { config, onMessage };

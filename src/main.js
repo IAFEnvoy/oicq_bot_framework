@@ -8,26 +8,10 @@ config.load();
 const c = config.getConfig();
 let pluginManager = new pluginloader.BotPluginManager();
 pluginManager.load(c);
-let startTime = new Date();
-const calDate = (faultDate, completeTime) => {
-    var stime = Date.parse(new Date(faultDate));
-    var etime = Date.parse(new Date(completeTime));
-    var usedTime = etime - stime;
-    var days = Math.floor(usedTime / (24 * 3600 * 1000));
-    var leave1 = usedTime % (24 * 3600 * 1000);
-    var hours = Math.floor(leave1 / (3600 * 1000));
-    var leave2 = leave1 % (3600 * 1000);
-    var minutes = Math.floor(leave2 / (60 * 1000));
-    var time = days + "天" + hours + "时" + minutes + "分";
-    return time;
-}
 
 const qq = c.qq;
 const client = oicq.createClient(qq);
 let ops = c.ops;
-let about = `冰火的VSCode
-Powered by OICQ Bot FrameWork
-Code by IAFEnvoy`;
 
 let rl = readline.createInterface({
     input: process.stdin,
@@ -68,14 +52,8 @@ client.on('message.group', async (e) => {
 
         if (message == '菜单')
             client.sendGroupMsg(e.group_id, pluginManager.getMenu(e.group_id));
-        if (message == '/stats') {
-            let now = new Date();
-            client.sendGroupMsg(e.group_id, `运行时间：${calDate(startTime, now)}`);
-        }
-        if (message == '/about')
-            client.sendGroupMsg(e.group_id, about);
 
-        pluginManager.call(client, e);
+        pluginManager.onMessage(client, e);
     } catch (err) {
         console.log(err);
     }

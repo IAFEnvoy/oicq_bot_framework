@@ -30,7 +30,7 @@ const datesAreOnSameDay = (f, s) => {
         first.getDate() == second.getDate();
 }
 
-const execute = (message, client, e) => {
+const onMessage = (message, client, e) => {
     if (message == '签到') {
         let ret = login(e.sender.user_id);
         if (ret.error == null){
@@ -53,4 +53,4 @@ const config = {
     default_permission: true
 };
 
-module.exports = { config, execute, init };
+module.exports = { config, onMessage, init };

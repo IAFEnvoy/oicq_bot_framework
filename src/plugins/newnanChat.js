@@ -1,6 +1,6 @@
 const oicq = require('oicq');
 
-const execute = (message, client, e) => {
+const onMessage = (message, client, e) => {
     if (message == '牛腩萝莉是谁') {
         client.sendGroupMsg(e.group_id, oicq.segment.image('./src/img/萝莉.jpg'));
     }
@@ -34,4 +34,4 @@ const config = {
     default_permission: false
 };
 
-module.exports = { config, execute };
+module.exports = { config, onMessage };
