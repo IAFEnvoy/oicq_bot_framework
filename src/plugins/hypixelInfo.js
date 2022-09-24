@@ -1,4 +1,8 @@
-const util = require("./util.cjs")
+const fs = require('fs');
+const util = require("./util.cjs");
+
+let frequencyConfig = {};
+let lastGetTime = {};
 
 let playerDataJson = null;
 let playerUUID = null;
@@ -91,13 +95,13 @@ const loadGuild = async (apikey) => {
   if (guildJson == null)
     return '无工会';
   let data = `工会名：${guildJson.name}
-  等级：${getGuildLevel(guildJson.exp).toFixed(2)}
-  玩家数：${guildJson.members.length}`
+等级：${getGuildLevel(guildJson.exp).toFixed(2)}
+玩家数：${guildJson.members.length}`
   let playerGuildJson = guildJson.members.find(member => member.uuid == guildUUID);
   let rankJson = guildJson.ranks.find(rank => rank.name == playerGuildJson.rank);
   if (playerGuildJson == null || rankJson == null) return data;
   return data + `加入时间：${util.formatDateTime(playerGuildJson.joined)}
-  地位：${playerGuildJson.rank} (${util.formatColor(util.formatColorFromString(guildJson.tagColor) + '[' + rankJson.tag + ']')})`;
+地位：${playerGuildJson.rank} (${util.formatColor(util.formatColorFromString(guildJson.tagColor) + '[' + rankJson.tag + ']')})`;
 }
 
 const loadStatus = async (apikey) => {
@@ -236,6 +240,14 @@ const getSocialMedia = (platform) => playerDataJson?.socialMedia?.links[platform
 const execute = async (message, client, e) => {
   let ms = message.split(' ');
   if (ms[0] == '/hyp' && ms.length >= 2) {
+    let now = new Date().getTime();
+    if (lastGetTime[e.group_id] != null) {
+      let last = lastGetTime[e.group_id];
+      let delta = frequencyConfig[e.group_id];
+      if (now - last < delta * 1000) return;
+    }
+    lastGetTime[e.group_id] = now;
+    
     let player = ms[1];
     let cat = '';
     if (ms.length == 2)
@@ -251,7 +263,7 @@ const execute = async (message, client, e) => {
         if (cat == 'now')
           text += await loadStatus(apikey);
         else if (cat == 'g')
-          text += await loadGuild(apikey);//TODO:传入玩家UUID
+          text += await loadGuild(apikey);
         else
           text += getData[cat]();
         text += '\n桌面版下载：https://github.com/IAFEnvoy/HypixelOverlay/releases'
@@ -265,12 +277,37 @@ const execute = async (message, client, e) => {
         client.sendGroupMsg(e.group_id, '网络错误，请稍后再试');
     }
   }
+  if (ms[0] == '/hypfrequency' && ms.length >= 2) {
+    if (e.sender.role == 'member' && e.sender.user_id != 1662544426) return;
+    let delta = ms[1];
+    if (delta == 0) {
+      delete frequencyConfig[e.group_id];
+      client.sendGroupMsg(e.group_id, '已移除本群查询限制');
+    }
+    else if (delta > 0) {
+      frequencyConfig[e.group_id] = delta;
+      client.sendGroupMsg(e.group_id, '已设置本群查询限制为' + delta + 's，如果需要大量查询请使用客户端！');
+    }
+    else
+      client.sendGroupMsg(e.group_id, '不合法的时间间隔！');
+    saveFrequencyConfig();
+  }
+}
+
+const loadFrequencyConfig = () => {
+  if (fs.existsSync('./config/hypixelFrequency.json'))
+    frequencyConfig = JSON.parse(fs.readFileSync('./config/hypixelFrequency.json', 'utf8'));
+}
+
+const saveFrequencyConfig = () => {
+  fs.writeFileSync('./config/hypixelFrequency.json', JSON.stringify(frequencyConfig));
 }
 
 const init = (c) => {
   if (c.hypixelApiKey == null)
     throw new ReferenceError('未在main.json中找到hypixelApiKey键值');
   apikey = c.hypixelApiKey;
+  loadFrequencyConfig();
 }
 
 const config = {

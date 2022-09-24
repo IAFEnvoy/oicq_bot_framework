@@ -1,7 +1,7 @@
 ﻿const oicq = require('oicq');
-const pluginloader = require('./pluginLoader.js');
-const config = require('./config');
 const readline = require('readline');
+const pluginloader = require('./pluginLoader');
+const config = require('./config');
 
 //初始化
 config.load();
@@ -53,15 +53,16 @@ client.on('system.login.device', async (e) => {
 client.on("system.login.qrcode", function (e) {
     //扫码后按回车登录
     process.stdin.once("data", () => {
-      this.login()
+        this.login()
     })
-  });
+});
 
 client.on('message.group', async (e) => {
-    let message = e.message[0].text;
-    if (message == null) return;
-
     try {
+        if (e.message.length > 1) return;
+        let message = e.message[0].text;
+        if (message == null) return;
+
         if (ops.find(op => op == e.sender.user_id) != undefined)
             pluginManager.runManagerEvent(client, e, c);
 

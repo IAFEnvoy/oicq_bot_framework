@@ -8,8 +8,17 @@ class BotPluginManager {
         this.permissionManager = new permission.PermissionManager();
     }
     clear() {
-        for (let i = 0; i < this.plugins.length; i++)
+        for (let i = 0; i < this.plugins.length; i++) {
             delete require.cache[require.resolve('./plugins/' + this.plugins[i].filename)];
+            if (this.plugins[i].dependencies != null)
+                try {
+                    for (let d in this.plugins[i].dependencies)
+                        delete require.cache[require.resolve('./plugins/' + d)];
+                } catch (err) {
+                    console.log('移除插件' + this.plugins[i].name + '的依赖时出错');
+                    console.log(err);
+                }
+        }
         this.plugins = [];
     }
     call(client, event) {
@@ -114,6 +123,7 @@ class BotPlugin {
         this.filename = filename;
         this.callback = callback;
         this.menu = config.menu;
+        this.dependencies = config.dependencies;
     }
 }
 
