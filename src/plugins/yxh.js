@@ -78,7 +78,9 @@ const m = [
     ])
 ]
 
-const onMessage = (message, client, e) => {
+const onMessage = (client, e) => {
+    if (e.message.length > 1) return;
+    let message = e.message[0].text;
     let ms = message.split(' ');
     if (ms[0] == '/yxh' && ms.length >= 3) {
         try {

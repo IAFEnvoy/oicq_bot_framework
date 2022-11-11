@@ -1,6 +1,7 @@
 const oicq = require('oicq');
 
-const onMessage = (message, client, e) => {
+const onMessage = (client, e) => {
+    let message = e.message[0].text;
     if (message == '牛腩萝莉是谁') {
         client.sendGroupMsg(e.group_id, oicq.segment.image('./src/img/萝莉.jpg'));
     }
@@ -17,8 +18,8 @@ const onMessage = (message, client, e) => {
         client.sendGroupMsg(e.group_id, oicq.segment.image('./src/img/轨交.png'));
     }
     if (message == '迫害马星') {
-        let r = Math.ceil(Math.random() * 4);
-        client.sendGroupMsg(e.group_id, oicq.segment.image(`./src/img/马星/${r}.jpg`));
+        let r = Math.floor(Math.random() * 4);
+        client.sendGroupMsg(e.group_id, oicq.segment.image(`./src/img/马星/${r+1}.jpg`));
     }
     if (message == '汤哈哈是谁') {
         client.sendGroupMsg(e.group_id, '涩涩蛋');

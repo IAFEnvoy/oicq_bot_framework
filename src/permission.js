@@ -1,6 +1,4 @@
 const fs = require('fs');
-const FILE_PATH = './permission.json';
-let config = {};
 
 //获取元素在数组的下标
 Array.prototype.indexOf = function (val) {
@@ -17,32 +15,36 @@ Array.prototype.remove = function (val) {
 };
 
 class PermissionManager {
-    constructor() { }
+    constructor(config_path) {
+        this.FILE_PATH = config_path;
+        this.config = {};
+    }
     load() {
-        if (fs.existsSync(FILE_PATH))
-            config = JSON.parse(fs.readFileSync(FILE_PATH, 'utf-8'));
+        if (fs.existsSync(this.FILE_PATH))
+            this.config = JSON.parse(fs.readFileSync(this.FILE_PATH, 'utf-8'));
         else
             this.save();
     }
     save() {
-        fs.writeFileSync(FILE_PATH, JSON.stringify(config), 'utf-8');
+        fs.writeFileSync(this.FILE_PATH, JSON.stringify(this.config), 'utf-8');
     }
     hasPermission(plugin_id, group_id) {
-        if (config[plugin_id] == null) return false;
-        return config[plugin_id].find(v => v == group_id) != null;
+        if (this.config[plugin_id] == null) return false;
+        return this.config[plugin_id].find(v => v == group_id) != null;
     }
     addPermission(plugin_id, group_id) {
-        if (config[plugin_id] == null) this.create(plugin_id);
-        config[plugin_id].push(group_id);
+        if (this.config[plugin_id] == null) this.create(plugin_id);
+        if (this.config[plugin_id].find(x => x == group_id) == null)
+            this.config[plugin_id].push(group_id);
         this.save();
     }
     removePermission(plugin_id, group_id) {
-        if (config[plugin_id] == null) return;
-        config[plugin_id].remove(group_id);
+        if (this.config[plugin_id] == null) return;
+        this.config[plugin_id].remove(group_id);
         this.save();
     }
     create(plugin_id) {
-        config[plugin_id] = [];
+        this.config[plugin_id] = [];
     }
 }
 

@@ -13,7 +13,6 @@ const saveTodayConfig = () => {
 }
 
 const today = (user_id) => {
-    let r = Math.ceil(Math.random() * 100);
     if (todayJson[user_id]?.karma == null)
         todayJson[user_id] = {};
     else if (datesAreOnSameDay(todayJson[user_id].last, new Date().getTime()))
@@ -30,14 +29,20 @@ const datesAreOnSameDay = (f, s) => {
         first.getDate() == second.getDate();
 }
 
-const onMessage = (message, client, e) => {
+const onMessage = (client, e) => {
+    let message = e.message[0].text;
     if (message == '/today') {
+        if (new Date().getDay() == 4) {
+            client.sendGroupMsg(e.group_id, [oicq.segment.at(e.sender.user_id), ' 今天疯狂星期四，v我50']);
+            return;
+        }
         client.sendGroupMsg(e.group_id, [oicq.segment.at(e.sender.user_id), ` 您今日的人品是${today(e.sender.user_id)}`]);
+        client.sendGroupMsg(e.group_id, '此功能即将停用，请使用/luck');
         saveTodayConfig();
     }
 }
 
-const init = (config) => {
+const onLoad = (config, client) => {
     loadTodayConfig();
 }
 
@@ -48,4 +53,4 @@ const config = {
     default_permission: true
 };
 
-module.exports = { config, onMessage, init };
+module.exports = { config, onMessage, onLoad };

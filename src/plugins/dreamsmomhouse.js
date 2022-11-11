@@ -2,7 +2,8 @@ const util = require("./util.cjs")
 
 let houseData = [];
 
-const onMessage = (message, client, e) => {
+const onMessage = (client, e) => {
+    let message = e.message[0].text;
     let ms = message.split(' ');
     if (ms[0] == '/house' && ms.length >= 2) {
         let room = houseData.find(obj => obj.location == ms[1]);
@@ -14,7 +15,7 @@ const onMessage = (message, client, e) => {
     }
 }
 
-const init = async (config) => {
+const onLoad = async (config, client) => {
     houseData = [];
     const json = await util.downloadAssets(config.house_path);
     for (let i = 0; i < json.length; i++) {
@@ -37,4 +38,4 @@ const config = {
     menu: '/house <id> 查小屋里的群'
 };
 
-module.exports = { config, onMessage, init };
+module.exports = { config, onMessage, onLoad };

@@ -9,6 +9,8 @@
   "dependencies": {
     "node-fetch": "^3.2.10",
     "oicq": "^2.3.1",
+    "oicq-guild": "^0.1.0",
+    "superagent": "^8.0.2",
     "typescript": "^4.8.3"
   },
   "author": "IAFEnvoy",

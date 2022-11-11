@@ -1,11 +1,15 @@
 const blWords = ['import', 'require', 'stop', 'rm', 'kill']
 const safeEval = (cmd) => blWords.find(item => cmd.search(item) != -1) == undefined ? eval(cmd) : '检测到黑名单字符，无法执行';
 
-const onMessage = (message, client, e) => {
+let error=null;
+
+const onMessage = (client, e) => {
+    let message = e.message[0].text;
     let ms = message.split(' ');
     if (ms[0] == 'run' && ms.length >= 2) {
         let text = "";
         try {
+            err=null;
             for (var i = 1; i < ms.length; i++) {
                 if (i != 1) text += ' ';
                 text += ms[i];
@@ -13,7 +17,8 @@ const onMessage = (message, client, e) => {
             client.sendGroupMsg(e.group_id, safeEval(text).toString());
         } catch (err) {
             console.log(err);
-            client.sendGroupMsg(e.group_id, `无法执行${text}`);
+            error=err;
+            client.sendGroupMsg(e.group_id, `无法执行此代码\n输入“run error”查看错误`);
         }
     }
 }

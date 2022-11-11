@@ -6,12 +6,12 @@ const config = require('./config');
 //初始化
 config.load();
 const c = config.getConfig();
-let pluginManager = new pluginloader.BotPluginManager();
-pluginManager.load(c);
-
 const qq = c.qq;
 const client = oicq.createClient(qq);
 let ops = c.ops;
+
+let pluginManager = new pluginloader.BotPluginManager();
+pluginManager.load(c, client);
 
 let rl = readline.createInterface({
     input: process.stdin,
@@ -43,11 +43,12 @@ client.on("system.login.qrcode", function (e) {
 
 client.on('message.group', async (e) => {
     try {
-        if (e.message.length > 1) return;
+        if (e.group.all_muted || e.group.mute_left > 0)
+            return console.log('因为禁言已取消发送消息');
         let message = e.message[0].text;
         if (message == null) return;
 
-        if (ops.find(op => op == e.sender.user_id) != undefined)
+        if (ops.find(op => op == e.sender.user_id) != null)
             pluginManager.runManagerEvent(client, e, c);
 
         if (message == '菜单')
@@ -63,6 +64,8 @@ client.on('notice.group.increase', (e) => {
     // if (e.user_id != qq)
     //     client.sendGroupMsg(e.group_id, '是新人酱欸');
 });
+
+setInterval(() => pluginManager.onTick(client), 1000);
 
 //使用MD5登录
 client.login(c.passwd);

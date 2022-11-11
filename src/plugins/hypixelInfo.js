@@ -237,7 +237,8 @@ const socialMediaList = ['DISCORD', 'HYPIXEL', 'TWITCH', 'TWITTER', 'YOUTUBE'];
 
 const getSocialMedia = (platform) => playerDataJson?.socialMedia?.links[platform] ?? null;
 
-const onMessage = async (message, client, e) => {
+const onMessage = async (client, e) => {
+  let message = e.message[0].text;
   let ms = message.split(' ');
   if (ms[0] == '/hyp' && ms.length >= 2) {
     let now = new Date().getTime();
@@ -303,7 +304,7 @@ const saveFrequencyConfig = () => {
   fs.writeFileSync('./config/hypixelFrequency.json', JSON.stringify(frequencyConfig));
 }
 
-const init = (c) => {
+const onLoad = (c, client) => {
   if (c.hypixelApiKey == null)
     throw new ReferenceError('未在main.json中找到hypixelApiKey键值');
   apikey = c.hypixelApiKey;
@@ -317,4 +318,4 @@ const config = {
   default_permission: false
 };
 
-module.exports = { config, onMessage, init };
+module.exports = { config, onMessage, onLoad };

@@ -1,4 +1,5 @@
-const onMessage = (message, client, e) => {
+const onMessage = (client, e) => {
+    let message = e.message[0].text;
     let ms = message.split(' ');
     if (ms[0] == '/echo' && ms.length >= 2) {
         try {

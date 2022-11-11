@@ -2,37 +2,39 @@
 const permission = require('./permission');
 
 class BotPluginManager {
-    constructor() {
+    constructor(client) {
         this.plugins = [];
         this.folder = './src/plugins';
-        this.permissionManager = new permission.PermissionManager();
+        this.permissionManager = new permission.PermissionManager('./permission.json');
     }
     clear() {
-        for (let i = 0; i < this.plugins.length; i++) {
+        for (let i = 0; i < this.plugins.length; i++)
             delete require.cache[require.resolve('./plugins/' + this.plugins[i].filename)];
-            if (this.plugins[i].dependencies != null)
-                try {
-                    for (let d in this.plugins[i].dependencies)
-                        delete require.cache[require.resolve('./plugins/' + d)];
-                } catch (err) {
-                    console.log('移除插件' + this.plugins[i].name + '的依赖时出错');
-                    console.log(err);
-                }
-        }
         this.plugins = [];
     }
     onMessage(client, event) {
         this.plugins.forEach(plugin => {
             try {
-                if (this.permissionManager.hasPermission(plugin.id, event.group_id))
-                    plugin.callback(event.message[0].text, client, event);
+                if (this.permissionManager.hasPermission(plugin.id, event.group_id) && plugin.onMessage != null)
+                    plugin.onMessage(client, event);
             } catch (err) {
                 console.log('运行插件' + plugin.name + '时出错');
                 console.log(err);
             }
         });
     }
-    load(config) {
+    onTick(client){
+        this.plugins.forEach(plugin => {
+            try {
+                if (plugin.onTick != null)
+                    plugin.onTick(client);
+            } catch (err) {
+                console.log('运行插件' + plugin.name + '时出错');
+                console.log(err);
+            }
+        });
+    }
+    load(config, client) {
         let files = fs.readdirSync(this.folder, 'utf-8');
         let cjsModule = files.reduce((p, c) => {
             if (c.endsWith('.js'))
@@ -44,9 +46,9 @@ class BotPluginManager {
         cjsModule.forEach(name => {
             try {
                 const plugin = require('./plugins/' + name);
-                if (plugin.init != null)
-                    plugin.init(config);
-                this.plugins.push(new BotPlugin(plugin.config, name, plugin.onMessage));
+                if (plugin.onLoad != null)
+                    plugin.onLoad(config, client);
+                this.plugins.push(new BotPlugin(plugin.config, name, plugin.onMessage, plugin.onRemove,plugin.onTick));
             } catch (err) {
                 console.log('加载插件文件' + name + '时出错');
                 console.log(err);
@@ -73,10 +75,11 @@ class BotPluginManager {
     }
     getMenu(group_id) { return this.plugins.reduce((p, c) => (!this.permissionManager.hasPermission(c.id, group_id) || c.menu == undefined) ? p : p + '\n' + c.menu, '菜单：'); }
     runManagerEvent(client, e, config) {
+        if (e.message.length > 1) return;
         let message = e.message[0].text;
         if (message == '/plugin reload') {
             this.clear();
-            this.load(config);
+            this.load(config, client);
             client.sendGroupMsg(e.group_id, '已成功重载插件');
             client.sendGroupMsg(e.group_id, '已安装插件：' + this.getPlugins());
         }
@@ -117,11 +120,13 @@ class BotPluginManager {
 }
 
 class BotPlugin {
-    constructor(config, filename, callback) {
+    constructor(config, filename, onMessage, onRemove,onTick) {
         this.id = config.id;
         this.name = config.name;
         this.filename = filename;
-        this.callback = callback;
+        this.onMessage = onMessage;
+        this.onRemove = onRemove;
+        this.onTick = onTick;
         this.menu = config.menu;
         this.dependencies = config.dependencies;
     }
