@@ -7,11 +7,10 @@
     "start": "node ."
   },
   "dependencies": {
+    "child_process": "^1.0.2",
     "node-fetch": "^3.2.10",
-    "oicq": "^2.3.1",
-    "oicq-guild": "^0.1.0",
-    "superagent": "^8.0.2",
-    "typescript": "^4.8.3"
+    "node-xlsx": "^0.21.0",
+    "oicq": "^2.3.1"
   },
   "author": "IAFEnvoy",
   "license": "GPL-3.0",

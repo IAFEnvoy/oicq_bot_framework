@@ -7,7 +7,7 @@ const config = require('./config');
 config.load();
 const c = config.getConfig();
 const qq = c.qq;
-const client = oicq.createClient(qq);
+const client = oicq.createClient(qq, { platform: 3 });
 let ops = c.ops;
 
 let pluginManager = new pluginloader.BotPluginManager();

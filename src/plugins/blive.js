@@ -12,22 +12,23 @@ class BilibiliLiveObject {
         this.loadLiveStatus();
     }
     async loadLiveStatus() {
-        let json=await this.getJson();
-        this.live_status = json.data.room_info.live_status;
+        let json = await this.getJson();
+        this.live_status = json?.data?.room_info?.live_status ?? 0;
     }
     async getJson() {
-        return await util.downloadAssets(`https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=${this.room_id}`);
+        return await util.downloadAssets(`https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=${this.room_id}`).catch(err => console.log(err));
     }
     async tick(client) {
-        try{
+        try {
             let json = await this.getJson();
-            let status = json.data.room_info.live_status;
+            let status = json?.data?.room_info?.live_status ?? null;
+            if (status == null) return;
             if (this.live_status == 0 && status == 1) //说明开播
-                this.target_group_id.forEach(id => client.sendGroupMsg(id, [oicq.segment.at('all'), `${this.up_nick_name}开播啦！\n${json.data.room_info.title}\n`, oicq.segment.image(json.data.room_info.cover), `\nhttps://live.bilibili.com/${this.room_id}`]).catch(reason => { console.log(reason) }));
+                this.target_group_id.forEach(id => client.sendGroupMsg(id, [`${this.up_nick_name}开播啦！\n${json.data.room_info.title}\n`, oicq.segment.image(json.data.room_info.cover), `\nhttps://live.bilibili.com/${this.room_id}`]).catch(reason => { console.log(reason) }));
             if (this.live_status == 1 && status == 0) //说明下播
                 this.target_group_id.forEach(id => client.sendGroupMsg(id, `${this.up_nick_name}下播了`).catch(reason => { console.log(reason) }));
             this.live_status = status;
-        }catch(e){
+        } catch (e) {
             console.log(e);
         }
     }
@@ -36,11 +37,15 @@ class BilibiliLiveObject {
 let time = 0;
 
 const onTick = (client) => {
-    time++;
-    if (time == 30) {
-        time = 0;
-        live_status.forEach(o => o.tick(client));
-        console.log(live_status.reduce((p, c) => `${p} ${c.room_id}(${c.up_nick_name}):${c.live_status}`, ''));
+    try {
+        time++;
+        if (time == 30) {
+            time = 0;
+            live_status.forEach(o => o.tick(client));
+            console.log(live_status.reduce((p, c) => `${p} ${c.room_id}(${c.up_nick_name}):${c.live_status}`, ''));
+        }
+    } catch (err) {
+        console.log(err);
     }
 }
 

@@ -37,6 +37,16 @@ const onMessage = async (client, event) => {
         await sleep(1000);
         client.sendGroupMsg(event.group_id, `猜${Math.floor((l + r) / 2)}`);
     }
+    if (event.message[0].type == 'at' && event.message[0].qq == 2703438790 && event.sender.user_id == 1254245394) {
+        try {
+            let problems = event.message[1].text.split('\n'), ans = [];
+            for (let i = 1; i <= 5; i++)
+                ans.push(eval(problems[i].split('=')[0]));
+            client.sendGroupMsg(event.group_id, `提交 ${ans.join(' ')}`);
+        } catch (err) {
+            console.log(err);
+        }
+    }
 }
 
 const config = {

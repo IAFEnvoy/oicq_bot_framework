@@ -31,7 +31,7 @@ const partLuckList = [
 
 const pickOnePart = (vis) => {
     if (vis.length == partLuckList.length) throw new RangeError();
-    let index = ranInt(0, partLuckList.length - 1);
+    let index = ranInt(0, partLuckList.length);
     while (vis.find(x => x == index) != null) {
         index--;
         if (index < 0) index += partLuckList.length;
@@ -45,9 +45,9 @@ const buildPart = (part, isGood) => {
 }
 
 const generate = () => {
-    let mainLuck = ranInt(0, 5);
+    let mainLuck = ranInt(0, 6);
     let mainText = mainLuckList[mainLuck].text;
-    let partCnt = ranInt(0, mainLuckList[mainLuck].case.length - 1);
+    let partCnt = ranInt(0, mainLuckList[mainLuck].case.length);
     let good = mainLuckList[mainLuck].case[partCnt].good;
     let bad = mainLuckList[mainLuck].case[partCnt].bad;
     if (good == Infinity) return { main: mainText, good: [{ text: '诸事皆宜', subtext: '' }], bad: [] };

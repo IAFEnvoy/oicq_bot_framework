@@ -93,10 +93,10 @@ const loadGuild = async (apikey) => {
   if (guildUUID != playerUUID)
     await downloadGuildJson(apikey);
   if (guildJson == null)
-    return '无工会';
-  let data = `工会名：${guildJson.name}
+    return `${getName()}的工会信息\n无工会`;
+  let data = `${getName()}的工会信息\n工会名：${guildJson.name}
 等级：${getGuildLevel(guildJson.exp).toFixed(2)}
-玩家数：${guildJson.members.length}`
+玩家数：${guildJson.members.length}\n`
   let playerGuildJson = guildJson.members.find(member => member.uuid == guildUUID);
   let rankJson = guildJson.ranks.find(rank => rank.name == playerGuildJson.rank);
   if (playerGuildJson == null || rankJson == null) return data;
@@ -111,11 +111,11 @@ const loadStatus = async (apikey) => {
   statusJson = b.session;
   if (statusJson.online)
     if (statusJson.map != null)
-      return `状态：在线\n游戏类型：${util.formatNameString(statusJson.gameType)}\n模式：${util.formatNameString(statusJson.mode)}\n地图：${statusJson.map}`;
+      return `${getName()}的当前在线状态\n状态：在线\n游戏类型：${util.formatNameString(statusJson.gameType)}\n模式：${util.formatNameString(statusJson.mode)}\n地图：${statusJson.map}`;
     else
-      return `状态：在线\n游戏类型 ：${util.formatNameString(statusJson.gameType)}\n模式：${util.formatNameString(statusJson.mode)}`;
+      return `${getName()}的当前在线状态\n状态：在线\n游戏类型 ：${util.formatNameString(statusJson.gameType)}\n模式：${util.formatNameString(statusJson.mode)}`;
   else
-    return `状态：离线`;
+    return `${getName()}的当前在线状态\n状态：离线`;
 }
 
 // 在等级 10 * k 至 10 * (k + 1) 时, 升一级所需经验
@@ -248,7 +248,7 @@ const onMessage = async (client, e) => {
       if (now - last < delta * 1000) return;
     }
     lastGetTime[e.group_id] = now;
-    
+
     let player = ms[1];
     let cat = '';
     if (ms.length == 2)
@@ -267,7 +267,7 @@ const onMessage = async (client, e) => {
           text += await loadGuild(apikey);
         else
           text += getData[cat]();
-        text += '\n桌面版下载：https://github.com/IAFEnvoy/HypixelOverlay/releases'
+        text += '\n桌面版下载：https://github.com/IAFEnvoy/StarburstOverlay/releases（附带实时查询）'
         client.sendGroupMsg(e.group_id, text);
       }
     } catch (err) {
