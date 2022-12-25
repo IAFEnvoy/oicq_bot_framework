@@ -16,11 +16,11 @@ pluginManager.load(c, client);
 let rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
-})
+});
 
 // process.exit(0);
 
-client.on("system.login.slider", function (e) {
+client.on("system.login.slider", (e) => {
     console.log("输入ticket：")
     process.stdin.once("data", ticket => this.submitSlider(String(ticket).trim()))
 });
@@ -34,12 +34,7 @@ client.on('system.login.device', async (e) => {
     });
 });
 
-client.on("system.login.qrcode", function (e) {
-    //扫码后按回车登录
-    process.stdin.once("data", () => {
-        this.login()
-    })
-});
+client.on("system.login.qrcode", (e) => process.stdin.once("data", () => this.login()));//扫码后按回车登录
 
 client.on('message.group', async (e) => {
     try {
@@ -53,7 +48,7 @@ client.on('message.group', async (e) => {
 
         if (message == '菜单')
             client.sendGroupMsg(e.group_id, pluginManager.getMenu(e.group_id));
-
+        
         pluginManager.onMessage(client, e);
     } catch (err) {
         console.log(err);

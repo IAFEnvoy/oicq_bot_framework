@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "child_process": "^1.0.2",
+    "mc-server-status": "^2.0.2",
     "node-fetch": "^3.2.10",
     "node-xlsx": "^0.21.0",
     "oicq": "^2.3.1"
