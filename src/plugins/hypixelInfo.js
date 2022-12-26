@@ -120,7 +120,7 @@ const getData = {
 等级：${(api.networkExp ?? 0) < 0 ? 1 : (1 - 3.5 + Math.sqrt(12.25 + 0.0008 * (api.networkExp ?? 0))).toFixed(2)} | 人品：${api.karma ?? 0}
 成就点数：${api.achievementPoints ?? 0}
 完成任务：${achievements.general_quest_master ?? 0} | 完成挑战：${achievements.general_challenger ?? 0}
-语言：${util.formatNameString(api.userLanguage ?? 'ENGLISH')}
+语言：${util.formatNameString(api.userLanguage ?? 'ENGLISH')} | Rank赠送：${api?.giftingMeta?.ranksGiven ?? 0}
 首次登入：${util.formatDateTime(api.firstLogin)}
 上次登入：${util.formatDateTime(api.lastLogin)}
 上次登出：${util.formatDateTime(api.lastLogout)}`;
@@ -222,6 +222,7 @@ const onMessage = async (client, e) => {
     } catch (err) {
       console.log(err);
     }
+    return;
   }
   if (message.replace(' ', '') == '/hypblr' && e.message.length >= 2 && e.sender.role != 'member') {
     if (e.message[1].type != 'at') return;
@@ -233,6 +234,7 @@ const onMessage = async (client, e) => {
     } catch (err) {
       console.log(err);
     }
+    return;
   }
   if (ms[0] == '/hypbl' && ms.length >= 2 && e.sender.role != 'member') {
     try {
