@@ -2,7 +2,7 @@ const fs = require('fs');
 const util = require("./util.cjs");
 
 let frequencyConfig = {};
-let hypixelBl = [];
+let hypixelBl = [], hypixelBl2 = [];
 let lastGetTime = {};
 
 let playerDataJson = {};
@@ -23,7 +23,8 @@ const loadPlayer = async (playername) => {
   const b = await util.downloadAssets(`https://api.hypixel.net/player?key=${apikey}&uuid=${playerUUID[playername].uuid}`);
   if (!b.success)
     return b.cause;
-  playerDataJson[playerUUID[playername].uuid] = { player: b.player ?? { 'displayname': a.name }, time: new Date().getTime() };
+  if (b.player == null) return '此玩家从未进入服务器';
+  playerDataJson[playerUUID[playername].uuid] = { player: b.player, time: new Date().getTime() };
   return null;
 }
 
@@ -74,7 +75,7 @@ const loadGuild = async (api, uuid) => {
   let data = `${getName(api)}的工会信息\n工会名：${guildJson.name}
 等级：${getGuildLevel(guildJson.exp).toFixed(2)}
 玩家数：${guildJson.members.length}\n`
-  let playerGuildJson = guildJson.members.find(member => member.uuid == guildUUID);
+  let playerGuildJson = guildJson.members.find(member => member.uuid == uuid);
   let rankJson = guildJson.ranks.find(rank => rank.name == playerGuildJson.rank);
   if (playerGuildJson == null || rankJson == null) return data;
   return data + `加入时间：${util.formatDateTime(playerGuildJson.joined)}
@@ -84,7 +85,7 @@ const loadGuild = async (api, uuid) => {
 const loadStatus = async (api, uuid) => {
   const b = await util.downloadAssets(`https://api.hypixel.net/status?key=${apikey}&uuid=${uuid}`);
   if (!b.success)
-    return document.getElementById('status').innerHTML = b.cause;
+    return b.cause;
   statusJson = b.session;
   if (statusJson.online)
     if (statusJson.map != null)
@@ -131,7 +132,7 @@ const getData = {
     return `${getName(api)}的Hypixel起床战争统计信息：
 等级：${achievements.bedwars_level ?? 0} | 硬币：${bedwar.coins ?? 0}
 连胜：${bedwar.winstreak ?? 0}
-破环床数：${bedwar.beds_broken_bedwars ?? 0} | 被破环床数：${bedwar.beds_lost_bedwars ?? 0}
+破坏床数：${bedwar.beds_broken_bedwars ?? 0} | 被破坏床数：${bedwar.beds_lost_bedwars ?? 0}
 胜场：${bedwar.wins_bedwars ?? 0} | 败场：${bedwar.losses_bedwars ?? 0} | W/L：${((bedwar.wins_bedwars ?? 0) / (bedwar.losses_bedwars ?? 0)).toFixed(2)}
 击杀：${bedwar.kills_bedwars ?? 0} | 死亡：${bedwar.deaths_bedwars ?? 0} | K/D：${((bedwar.kills_bedwars ?? 0) / (bedwar.deaths_bedwars ?? 0)).toFixed(2)}
 最终击杀：${bedwar.final_kills_bedwars ?? 0} | 最终死亡：${bedwar.final_deaths_bedwars ?? 0} | FKDR：${((bedwar.final_kills_bedwars ?? 0) / (bedwar.final_deaths_bedwars ?? 0)).toFixed(2)}
@@ -209,62 +210,106 @@ K+A/D：${(((pit_stats_ptl.kills ?? 0) + (pit_stats_ptl.assists ?? 0)) / (pit_st
   }
 };
 
+const idBlList = ['Notch', 'jeb_', 'Dream', 'Technoblade', 'Zi__Min', 'hypixel', 'jamzs', '111',
+  '114514', '1145141919810', 'You', 'hyp', 'him', 'WanderFoFTG', 'q3GG',
+  'homo', 'cnm', 'rnm', 'g', 'wcnmb', 'guiwow'];
+
 const onMessage = async (client, e) => {
   let message = e.message[0].text;
   let ms = message.split(' ');
-  if (message.replace(' ', '') == '/hypbl' && e.message.length >= 2 && e.sender.role != 'member') {
+  if (message.replace(' ', '') == '/bl' && e.message.length >= 2 && (e.sender.role != 'member' || e.sender.user_id == 1662544426)) {
     if (e.message[1].type != 'at') return;
     try {
-      if (hypixelBl.indexOf(e.message[1].qq) != -1) return client.sendGroupMsg(e.group_id, `此人已经在黑名单中！`).catch(err => console.log(err));
-      hypixelBl.push(e.message[1].qq);
+      let status = addBl(e.message[1].qq);
       saveBlConfig();
-      client.sendGroupMsg(e.group_id, `已成功拉黑${e.message[1].qq}`).catch(err => console.log(err));
+      if (status == 0)
+        client.sendGroupMsg(e.group_id, `警告${e.message[1].qq}一次，不要乱查id！`).catch(err => console.log(err));
+      if (status == 1)
+        client.sendGroupMsg(e.group_id, `已成功拉黑${e.message[1].qq}`).catch(err => console.log(err));
+      if (status == 2)
+        client.sendGroupMsg(e.group_id, `此人已在黑名单中`).catch(err => console.log(err));
     } catch (err) {
       console.log(err);
     }
     return;
   }
-  if (message.replace(' ', '') == '/hypblr' && e.message.length >= 2 && e.sender.role != 'member') {
+  if (message.replace(' ', '') == '/blr' && e.message.length >= 2 && (e.sender.role != 'member' || e.sender.user_id == 1662544426)) {
     if (e.message[1].type != 'at') return;
     try {
-      if (hypixelBl.indexOf(e.message[1].qq) == -1) return client.sendGroupMsg(e.group_id, `此人不在黑名单中！`).catch(err => console.log(err));
-      hypixelBl.splice(hypixelBl.indexOf(e.message[1].qq), 1);
+      let status = removeBl(e.message[1].qq)
       saveBlConfig();
-      client.sendGroupMsg(e.group_id, `已成功取消拉黑${e.message[1].qq}`).catch(err => console.log(err));
+      if (status == 0)
+        client.sendGroupMsg(e.group_id, `此人不在黑名单中`).catch(err => console.log(err));
+      if (status == 1)
+        client.sendGroupMsg(e.group_id, `已成功取消警告${e.message[1].qq}，下次注意！`).catch(err => console.log(err));
+      if (status == 2)
+        client.sendGroupMsg(e.group_id, `已成功取消拉黑${e.message[1].qq}`).catch(err => console.log(err));
     } catch (err) {
       console.log(err);
     }
     return;
   }
-  if (ms[0] == '/hypbl' && ms.length >= 2 && e.sender.role != 'member') {
+  if (ms[0] == '/bl' && ms.length >= 2 && (e.sender.role != 'member' || e.sender.user_id == 1662544426)) {
     try {
-      if (hypixelBl.indexOf(ms[1]) != -1) return client.sendGroupMsg(e.group_id, `此人已经在黑名单中！`).catch(err => console.log(err));
-      hypixelBl.push(ms[1]);
+      let status = addBl(ms[1]);
       saveBlConfig();
-      client.sendGroupMsg(e.group_id, `已成功拉黑${ms[1]}`).catch(err => console.log(err));
+      if (status == 0)
+        client.sendGroupMsg(e.group_id, `警告${ms[1]}一次，不要乱查id！`).catch(err => console.log(err));
+      if (status == 1)
+        client.sendGroupMsg(e.group_id, `已成功拉黑${ms[1]}`).catch(err => console.log(err));
+      if (status == 2)
+        client.sendGroupMsg(e.group_id, `此人已在黑名单中`).catch(err => console.log(err));
     } catch (err) {
       console.log(err);
     }
   }
-  if (ms[0] == '/hypblr' && ms.length >= 2 && e.sender.role != 'member') {
+  if (ms[0] == '/blr' && ms.length >= 2 && (e.sender.role != 'member' || e.sender.user_id == 1662544426)) {
     try {
-      if (hypixelBl.indexOf(ms[1]) == -1) return client.sendGroupMsg(e.group_id, `此人不在黑名单中！`).catch(err => console.log(err));
-      hypixelBl.splice(hypixelBl.indexOf(ms[1]));
+      let status = removeBl(ms[1])
       saveBlConfig();
-      client.sendGroupMsg(e.group_id, `已成功取消拉黑${ms[1]}`).catch(err => console.log(err));
+      if (status == 0)
+        client.sendGroupMsg(e.group_id, `此人不在黑名单中`).catch(err => console.log(err));
+      if (status == 1)
+        client.sendGroupMsg(e.group_id, `已成功取消警告${ms[1]}，下次注意！`).catch(err => console.log(err));
+      if (status == 2)
+        client.sendGroupMsg(e.group_id, `已成功取消拉黑${ms[1]}`).catch(err => console.log(err));
     } catch (err) {
       console.log(err);
     }
   }
-  if ((ms[0] == '/hyp' || modeList.indexOf(ms[0].substring(1)) != -1) && ms.length >= 2) {
-    if (hypixelBl.indexOf(e.sender.user_id) != -1) return client.sendGroupMsg(e.group_id, '你已被拉黑，请联系管理');
-    let now = new Date().getTime();
+  if ((ms[0] == '/hyp' || modeList.indexOf(ms[0].substring(1)) != -1 && ms[0].startsWith('/')) && ms.length >= 2) {
+    let now = new Date().getTime();//查询冷却逻辑
     if (lastGetTime[e.group_id] != null) {
       let last = lastGetTime[e.group_id];
       let delta = frequencyConfig[e.group_id];
       if (now - last < delta * 1000) return;
     }
     lastGetTime[e.group_id] = now;
+
+    //拉黑逻辑
+    if (hypixelBl2.indexOf(e.sender.user_id) != -1) return client.sendGroupMsg(e.group_id, '你已被拉黑，请联系管理');
+    if (idBlList.find(x => x.toLowerCase() == ms[1].toLowerCase()) != null) {//自动拉黑
+      try {
+        let status = addBl(e.sender.user_id);
+        saveBlConfig();
+        if (status == 0)
+          client.sendGroupMsg(e.group_id, `警告${e.sender.user_id}一次，不要乱查id。下次自动拉黑！`).catch(err => console.log(err));
+        if (status == 1)
+          client.sendGroupMsg(e.group_id, `已自动拉黑${e.sender.user_id}`).catch(err => console.log(err));
+        if (status == 2)
+          client.sendGroupMsg(e.group_id, `此人已在黑名单中`).catch(err => console.log(err));
+        return;
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    if (ms[1].toLowerCase() == 'sb')
+      return e.reply('呦，查自己呐~', true).catch(err => console.log(err));
+
+    //判断是否是合法id
+    if (!/^[A-Za-z0-9_]{1,20}$/.test(ms[1]))
+      return e.reply(e.group_id, `不合法的id`, true).catch(err => console.log(err));
 
     let player = ms[1];
     let cat = '';
@@ -274,27 +319,30 @@ const onMessage = async (client, e) => {
       cat = ms[2];
     if (cat == 'hyp') cat = 'ov';
     try {
-      if (playerDataJson[player] == null || new Date().getTime() - playerDataJson[player].time > 60 * 1000) {
+      if (playerDataJson[player] == null||playerDataJson[player].player == null || new Date().getTime() - playerDataJson[player].time > 60 * 1000) {
         let error = await loadPlayer(player);
         if (error != null)
-          return client.sendGroupMsg(e.group_id, error);
+          return e.reply(error, true);
       }
       let text = '';
       if (cat == 'now')
-        text += await loadStatus(playerUUID[player].uuid);
+        text += await loadStatus(playerDataJson[playerUUID[player].uuid].player,playerUUID[player].uuid);
       else if (cat == 'g')
-        text += await loadGuild(playerUUID[player].uuid);
+        text += await loadGuild(playerDataJson[playerUUID[player].uuid].player,playerUUID[player].uuid);
       else
         text += getData[cat](playerDataJson[playerUUID[player].uuid].player);
       text += '\n桌面版下载：https://github.com/IAFEnvoy/StarburstOverlay/releases（附带实时查询）'
-      client.sendGroupMsg(e.group_id, text);
+      e.reply(text, true);
     } catch (err) {
       console.log(err);
       if (err.message.indexOf('is not a function') != -1)
-        client.sendGroupMsg(e.group_id, `未知的分类，当前支持的分类：${modeList}`)
+        e.reply(`未知的分类，当前支持的分类：${modeList}`, true)
       else
-        client.sendGroupMsg(e.group_id, '网络错误，请稍后再试');
+        e.reply('网络错误，请稍后再试', true);
     }
+  }
+  if (ms[0] == '/hyp' && ms.length == 1) {
+    client.sendGroupMsg(e.group_id, `当前支持的分类：${modeList}\n使用/hyp xxx bw或者/bw xxx都可以\n查询特殊id或者YT会被拉黑`);
   }
   if (ms[0] == '/hypfrequency' && ms.length >= 2) {
     if (e.sender.role == 'member' && e.sender.user_id != 1662544426) return;
@@ -313,6 +361,29 @@ const onMessage = async (client, e) => {
   }
 }
 
+const addBl = (qq) => {
+  if (hypixelBl2.indexOf(qq) != -1) return 2;
+  if (hypixelBl.indexOf(qq) != -1) {
+    hypixelBl2.push(qq);
+    hypixelBl.splice(hypixelBl.indexOf(qq), 1);
+    return 1;
+  } else
+    hypixelBl.push(qq);
+  return 0;
+}
+
+const removeBl = (qq) => {
+  if (hypixelBl.indexOf(qq) != -1) {
+    hypixelBl.splice(hypixelBl.indexOf(qq), 1);
+    return 1;
+  } else if (hypixelBl2.indexOf(qq) != -1) {
+    hypixelBl2.splice(hypixelBl2.indexOf(qq), 1);
+    hypixelBl.push(qq);
+    return 2;
+  }
+  return 0;
+}
+
 const loadFrequencyConfig = () => {
   if (fs.existsSync('./config/hypixelFrequency.json'))
     frequencyConfig = JSON.parse(fs.readFileSync('./config/hypixelFrequency.json', 'utf8'));
@@ -325,10 +396,13 @@ const saveFrequencyConfig = () => {
 const loadBlConfig = () => {
   if (fs.existsSync('./config/hypixelBl.json'))
     hypixelBl = JSON.parse(fs.readFileSync('./config/hypixelBl.json', 'utf8'));
+  if (fs.existsSync('./config/hypixelBl2.json'))
+    hypixelBl2 = JSON.parse(fs.readFileSync('./config/hypixelBl2.json', 'utf8'));
 }
 
 const saveBlConfig = () => {
   fs.writeFileSync('./config/hypixelBl.json', JSON.stringify(hypixelBl));
+  fs.writeFileSync('./config/hypixelBl2.json', JSON.stringify(hypixelBl2));
 }
 
 const onLoad = (c, client) => {
@@ -340,8 +414,8 @@ const onLoad = (c, client) => {
 }
 
 const config = {
-  id: 'hypixel',
-  name: 'Hypixel数据查询',
+  id: 'hypixel-wbl',
+  name: 'Hypixel数据查询-带黑名单',
   menu: '/hyp <playername> (<type>) Hypixel数据查询',
   default_permission: false
 };

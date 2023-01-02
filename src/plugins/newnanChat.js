@@ -28,24 +28,27 @@ const onMessage = (client, e) => {
     if (message == '问卷答完之后怎么做') {
         client.sendGroupMsg(e.group_id, '找任意管理，将100分截图给他');
     }
-    if (message == '冰火服') {
+    if (message.indexOf('冰火服') != -1) {
         getServerStatus(client, e.group_id);
-    }
+    } if (message == '/dice')
+        client.sendGroupMsg(e.group_id, oicq.segment.dice(6))
+    if (message == '来张色图' || message == '来张黄图')
+        e.reply('爪巴', true);
 }
 
 const getServerStatus = async (client, group_id) => {
     try {
-        let status = await mcServerInfo.getStatus('minecraft.newnan.city');
+        let status = await mcServerInfo.getStatus('minecraft.newnan.city').catch(err => console.log(err));
         if (status == null) return client.sendGroupMsg(group_id, '呜呜，查询超时！是网络太差还是主服关闭了？').catch(err => console.log(err));
         let s = '[牛腩主服]\n';
         s += `版本：${status.version?.name ?? '未知'}\n`;
-        s += `延迟：${status.ping}ms\n`
-        s += `在线玩家：[${status.players?.online ?? '?'}/${status.players?.max ?? '?'}]`;
-        for (let { name } of status.players.sample)
-            s += `\n- ${name}`;
-        if (status.players.sample.length < status.players.online) s += '\n  等玩家';
+        s += `延迟：${status.ping}ms\n`;
+        s += `在线玩家：[${status.players?.online ?? '?'}/${status.players?.max ?? '?'}]\n`;
+        s += (status.players?.sample?.map(player => `- ${player.name}`) ?? []).join('\n');
+        if (status.players.sample != null && status.players.sample.length < status.players.online) s += '\n  等玩家';
         client.sendGroupMsg(group_id, s).catch(err => console.log(err));
     } catch (err) {
+        console.log(err);
         client.sendGroupMsg(group_id, '呜呜，查询超时！是网络太差还是主服关闭了？').catch(err => console.log(err));
     }
 }

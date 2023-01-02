@@ -69,7 +69,7 @@ const onLoad = (config, client) => {
 
 const config = {
     id: 'bind',//必选
-    name: '',//必选
+    name: '绑定插件',//必选
     menu: '/bind <你的游戏id> 绑定你的id'//可选，如不定义则没有菜单项
 };
 

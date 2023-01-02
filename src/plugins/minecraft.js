@@ -5,7 +5,7 @@ const onMessage = async (client, event) => {
     let ms = message.split(' ');
     if (ms[0] == '/mcping' && ms.length == 2) {
         try {
-            let res = await serverInfo.getStatus(ms[1]);
+            let res = await serverInfo.getStatus(ms[1].split(":")[0], ms[1].split(':')[1]);
             if (res == null) return client.sendGroupMsg(event.group_id, '查询超时！').catch(err => console.log(err));
             let s = `服务器地址：${ms[1]}\n`;
             s += `描述：${res.description.extra == null ? res.description : res.description.extra.reduce((p, c) => p + c.text, '')}\n`;
