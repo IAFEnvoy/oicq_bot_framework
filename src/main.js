@@ -22,7 +22,7 @@ let rl = readline.createInterface({
 
 client.on("system.login.slider", (e) => {
     console.log("输入ticket：")
-    process.stdin.once("data", ticket => this.submitSlider(String(ticket).trim()))
+    process.stdin.once("data", ticket => client.submitSlider(String(ticket).trim()))
 });
 
 client.on('system.login.device', async (e) => {
@@ -34,7 +34,7 @@ client.on('system.login.device', async (e) => {
     });
 });
 
-client.on("system.login.qrcode", (e) => process.stdin.once("data", () => this.login()));//扫码后按回车登录
+client.on("system.login.qrcode", (e) => process.stdin.once("data", () => client.login()));//扫码后按回车登录
 
 client.on('message.group', async (e) => {
     try {

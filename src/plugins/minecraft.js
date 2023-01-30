@@ -1,6 +1,9 @@
 const serverInfo = require('mc-server-status');
+const oicq = require('oicq');
+const fs=require("fs");
 
 const onMessage = async (client, event) => {
+    if(hypixelBl.indexOf(event.sender.user_id)!=-1||hypixelBl2.indexOf(event.sender.user_id)!=-1) return;
     let message = event.message[0].text;
     let ms = message.split(' ');
     if (ms[0] == '/mcping' && ms.length == 2) {
@@ -17,7 +20,54 @@ const onMessage = async (client, event) => {
             return client.sendGroupMsg(event.group_id, '查询超时！').catch(err => console.log(err));
         }
     }
+    if (ms[0] == '/mcskin' && ms.length == 2) {
+        try {
+            let name = ms[1];
+            let a = await fetch(`https://api.mojang.com/users/profiles/minecraft/${name}`)
+                .catch(err => { throw err })
+                .then(res => res.json());
+            let uuid = a.id;
+            client.sendGroupMsg(event.group_id, oicq.segment.image(`https://crafatar.com/renders/body/${uuid}?overlay`)).catch(err => console.log(err));
+        } catch (err) {
+            event.reply('未找到此玩家，请确认是否拼写错误');
+        }
+    }
+    if (ms[0] == '/mchead' && ms.length == 2) {
+        try {
+            let name = ms[1];
+            let a = await fetch(`https://api.mojang.com/users/profiles/minecraft/${name}`)
+                .catch(err => { throw err })
+                .then(res => res.json());
+            let uuid = a.id;
+            client.sendGroupMsg(event.group_id, oicq.segment.image(`https://crafatar.com/renders/head/${uuid}?overlay`)).catch(err => console.log(err));
+        } catch (err) {
+            event.reply('未找到此玩家，请确认是否拼写错误');
+        }
+    }
+    if (ms[0] == '/mcavatar' && ms.length == 2) {
+        try {
+            let name = ms[1];
+            let a = await fetch(`https://api.mojang.com/users/profiles/minecraft/${name}`)
+                .catch(err => { throw err })
+                .then(res => res.json());
+            let uuid = a.id;
+            client.sendGroupMsg(event.group_id, oicq.segment.image(`https://crafatar.com/avatars/${uuid}?overlay`)).catch(err => console.log(err));
+        } catch (err) {
+            event.reply('未找到此玩家，请确认是否拼写错误');
+        }
+    }
 }
+
+let hypixelBl,hypixelBl2;
+
+const loadBlConfig = () => {
+  if (fs.existsSync('./config/hypixelBl.json'))
+    hypixelBl = JSON.parse(fs.readFileSync('./config/hypixelBl.json', 'utf8'));
+  if (fs.existsSync('./config/hypixelBl2.json'))
+    hypixelBl2 = JSON.parse(fs.readFileSync('./config/hypixelBl2.json', 'utf8'));
+}
+
+const onLoad=()=>loadBlConfig();
 
 const config = {
     id: 'minecraft',//必选
@@ -25,4 +75,4 @@ const config = {
     menu: '/mcping <ip> 查服'
 };
 
-module.exports = { config, onMessage };
+module.exports = { config, onMessage,onLoad };

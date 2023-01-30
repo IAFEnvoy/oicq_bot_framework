@@ -29,7 +29,9 @@ const loadPlayer = async (playername) => {
 }
 
 const getRank = (api) => {
-  let rank = api.newPackageRank;
+  let rank = api.packageRank;
+  if (rank == null)
+    rank = api.newPackageRank;
   let plus = api.rankPlusColor;
   if (plus != undefined)
     plus = util.formatColorFromString(plus);
@@ -48,7 +50,12 @@ const getRank = (api) => {
   else return `§7`;
 }
 
-const getName = (api) => util.formatColor(getRank(api) + api.displayname);
+const getLocalTag = (uuid) => {
+  if (uuid == '40dff9cbb87b473f946b4dc9776949cc' || uuid == 'f1f464287e894024a5554610d635fa55') return '[开发]';
+  return '';
+}
+
+const getName = (api) => util.formatColor(getLocalTag(api.uuid) + getRank(api) + api.displayname);
 
 const getGuildLevel = (exp) => {
   let guildLevelTables = [100000, 150000, 250000, 500000, 750000, 1000000, 1250000, 1500000, 2000000, 2500000, 2500000, 2500000, 2500000, 2500000, 3000000];
@@ -71,15 +78,15 @@ const downloadGuildJson = async (apikey, uuid) => {
 const loadGuild = async (api, uuid) => {
   await downloadGuildJson(apikey, uuid);
   if (guildJson == null)
-    return `${getName(api)}的工会信息\n无工会`;
-  let data = `${getName(api)}的工会信息\n工会名：${guildJson.name}
+    return `${getName(api)}的公会信息\n无公会`;
+  let data = `${getName(api)}的公会信息\n公会名：${guildJson.name}
 等级：${getGuildLevel(guildJson.exp).toFixed(2)}
 玩家数：${guildJson.members.length}\n`
   let playerGuildJson = guildJson.members.find(member => member.uuid == uuid);
   let rankJson = guildJson.ranks.find(rank => rank.name == playerGuildJson.rank);
   if (playerGuildJson == null || rankJson == null) return data;
   return data + `加入时间：${util.formatDateTime(playerGuildJson.joined)}
-地位：${playerGuildJson.rank} (${util.formatColor(util.formatColorFromString(guildJson.tagColor) + '[' + rankJson.tag + ']')})`;
+  地位：${playerGuildJson.rank} (${'[' + rankJson.tag + ']'})`;
 }
 
 const loadStatus = async (api, uuid) => {
@@ -319,19 +326,19 @@ const onMessage = async (client, e) => {
       cat = ms[2];
     if (cat == 'hyp') cat = 'ov';
     try {
-      if (playerDataJson[player] == null||playerDataJson[player].player == null || new Date().getTime() - playerDataJson[player].time > 60 * 1000) {
+      if (playerDataJson[player] == null || playerDataJson[player].player == null || new Date().getTime() - playerDataJson[player].time > 60 * 1000) {
         let error = await loadPlayer(player);
         if (error != null)
           return e.reply(error, true);
       }
       let text = '';
       if (cat == 'now')
-        text += await loadStatus(playerDataJson[playerUUID[player].uuid].player,playerUUID[player].uuid);
+        text += await loadStatus(playerDataJson[playerUUID[player].uuid].player, playerUUID[player].uuid);
       else if (cat == 'g')
-        text += await loadGuild(playerDataJson[playerUUID[player].uuid].player,playerUUID[player].uuid);
+        text += await loadGuild(playerDataJson[playerUUID[player].uuid].player, playerUUID[player].uuid);
       else
         text += getData[cat](playerDataJson[playerUUID[player].uuid].player);
-      text += '\n桌面版下载：https://github.com/IAFEnvoy/StarburstOverlay/releases（附带实时查询）'
+      text += '\n桌面版下载：https://www.iafenvoy.net/dl/StarburstOverlay（附带实时查询）'
       e.reply(text, true);
     } catch (err) {
       console.log(err);
